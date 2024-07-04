@@ -265,8 +265,19 @@ void AiFactory::AddDefaultCombatStrategies(Player* player, PlayerbotAI* const fa
 
     if (!player->InBattleground())
     {
-        LOG_INFO("playerbots", "AddDefaultCombatStrategies bot={} no bg", player->GetName());
+        LOG_INFO("playerbots", "AddDefaultCombatStrategies bot={} bg NO", player->GetName());
         engine->addStrategies("racials", "chat", "default", "cast time", "duel", "boost", nullptr);
+    }
+    else
+    {
+        if (player->GetBattleground())
+        {
+            LOG_INFO("playerbots", "AddDefaultCombatStrategies bot={} bg YES foundPlayerBG YES bgType=", player->GetName(), player->GetBattlegroundTypeId());
+        }
+        else
+        {
+            LOG_INFO("playerbots", "AddDefaultCombatStrategies bot={} bg YES foundPlayerBG NO bgType=", player->GetName(), player->GetBattlegroundTypeId());
+        }
     }
     if (sPlayerbotAIConfig->autoSaveMana) 
     {
@@ -543,9 +554,20 @@ void AiFactory::AddDefaultNonCombatStrategies(Player* player, PlayerbotAI* const
 
     if (!player->InBattleground())
     {
-        LOG_INFO("playerbots", "AddDefaultNonCombatStrategies bot={} no bg", player->GetName());
+        LOG_INFO("playerbots", "AddDefaultNonCombatStrategies bot={} bg NO", player->GetName());
         nonCombatEngine->addStrategies("nc", "food", "chat", "follow",
             "default", "quest", "loot", "gather", "duel", "buff", "mount", nullptr);
+    }
+    else
+    {
+        if (player->GetBattleground())
+        {
+            LOG_INFO("playerbots", "AddDefaultNonCombatStrategies bot={} bg YES foundPlayerBG YES bgType=", player->GetName(), player->GetBattlegroundTypeId());
+        }
+        else
+        {
+            LOG_INFO("playerbots", "AddDefaultNonCombatStrategies bot={} bg YES foundPlayerBG NO bgType=", player->GetName(), player->GetBattlegroundTypeId());
+        }
     }
     if (sPlayerbotAIConfig->autoSaveMana) {
         nonCombatEngine->addStrategy("auto save mana");
