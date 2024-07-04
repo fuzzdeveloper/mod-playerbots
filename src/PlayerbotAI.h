@@ -323,6 +323,7 @@ class PlayerbotAI : public PlayerbotAIBase
         void ChangeStrategy(std::string const name, BotState type);
         void ClearStrategies(BotState type);
         std::vector<std::string> GetStrategies(BotState type);
+        std::string const ListStrategies(BotState type);
         bool ContainsStrategy(StrategyType type);
         bool HasStrategy(std::string const name, BotState type);
         BotState GetState() { return currentState; };

@@ -2597,9 +2597,11 @@ bool BGTactics::wsgPaths()
 
 bool BGTactics::Execute(Event event)
 {
+    LOG_INFO("playerbots", "BGTactics bot={} combatStrats={} nonCombatStrats={}", bot->GetName(), botAI->ListStrategies(BOT_STATE_COMBAT), botAI->ListStrategies(BOT_STATE_NON_COMBAT));
     Battleground* bg = bot->GetBattleground();
     if (!bg)
     {
+        LOG_INFO("playerbots", "BGTactics bot={} no bg... resetting", bot->GetName());
         botAI->ResetStrategies();
         return false;
     }
@@ -2610,6 +2612,7 @@ bool BGTactics::Execute(Event event)
     if (bg->isArena())
     {
         // can't use this in arena - it will crash server wehen vPaths/vFlagIds are used uninitialized
+        LOG_INFO("playerbots", "BGTactics bot={} is arena... resetting", bot->GetName());
         botAI->ResetStrategies();
         return false;
     }
@@ -4839,8 +4842,10 @@ bool BGTactics::IsLockedInsideKeep()
 
 bool ArenaTactics::Execute(Event event)
 {
+    LOG_INFO("playerbots", "ArenaTactics bot={} combatStrats={} nonCombatStrats={}", bot->GetName(), botAI->ListStrategies(BOT_STATE_COMBAT), botAI->ListStrategies(BOT_STATE_NON_COMBAT));
     if (!bot->InBattleground())
     {
+        LOG_INFO("playerbots", "ArenaTactics not in BG - reset");
         bool IsRandomBot = sRandomPlayerbotMgr->IsRandomBot(bot->GetGUID().GetCounter());
         botAI->ChangeStrategy("-arena", BOT_STATE_COMBAT);
         botAI->ChangeStrategy("-arena", BOT_STATE_NON_COMBAT);
@@ -4888,6 +4893,7 @@ bool ArenaTactics::Execute(Event event)
 
 bool ArenaTactics::moveToCenter(Battleground* bg)
 {
+    LOG_INFO("playerbots", "ArenaTactics moveToCenter");
     // Sanity check
     if (!bg)
     {

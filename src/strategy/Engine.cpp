@@ -625,6 +625,7 @@ bool Engine::ListenAndExecute(Action* action, Event event)
 
 void Engine::LogAction(char const* format, ...)
 {
+    if (true) return;//to shut this up while i figure out arena
     Player* bot = botAI->GetBot();
     if (sPlayerbotAIConfig->logInGroupOnly && (!bot->GetGroup() || !botAI->HasRealPlayerMaster()) && !testMode)
         return;

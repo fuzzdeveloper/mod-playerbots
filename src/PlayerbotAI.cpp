@@ -1241,6 +1241,23 @@ std::vector<std::string> PlayerbotAI::GetStrategies(BotState type)
     return e->GetStrategies();
 }
 
+std::string const PlayerbotAI::ListStrategies(BotState type)
+{
+    Engine* e = engines[type];
+    if (!e)
+        return "ERROR NO ENGINE";
+    std::vector<std::string> strategies = e->GetStrategies();
+    std::string s = "Strategies: ";
+    if (strategies.empty())
+        return std::move(s);
+    for (std::vector<std::string>::iterator i = strategies.begin(); i != strategies.end(); i++)
+    {
+        s.append(*i);
+        s.append(", ");
+    }
+    return s.substr(0, s.length() - 2);
+}
+
 bool PlayerbotAI::DoSpecificAction(std::string const name, Event event, bool silent, std::string const qualifier)
 {
     std::ostringstream out;
@@ -1333,6 +1350,7 @@ bool PlayerbotAI::HasStrategy(std::string const name, BotState type)
 
 void PlayerbotAI::ResetStrategies(bool load)
 {
+    LOG_INFO("playerbots", "ResetStrategies {}", bot->GetName());
     for (uint8 i = 0 ; i < BOT_STATE_MAX; i++)
         engines[i]->removeAllStrategies();
 

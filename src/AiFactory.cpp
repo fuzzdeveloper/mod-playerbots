@@ -260,10 +260,12 @@ std::string AiFactory::GetPlayerSpecName(Player* player)
 
 void AiFactory::AddDefaultCombatStrategies(Player* player, PlayerbotAI* const facade, Engine* engine)
 {
+    LOG_INFO("playerbots", "AddDefaultCombatStrategies bot={}", player->GetName());
     uint8 tab = GetPlayerSpecTab(player);
 
     if (!player->InBattleground())
     {
+        LOG_INFO("playerbots", "AddDefaultCombatStrategies bot={} no bg", player->GetName());
         engine->addStrategies("racials", "chat", "default", "cast time", "duel", "boost", nullptr);
     }
     if (sPlayerbotAIConfig->autoSaveMana) 
@@ -432,6 +434,7 @@ void AiFactory::AddDefaultCombatStrategies(Player* player, PlayerbotAI* const fa
 
         if (player->InArena())
         {
+            LOG_INFO("playerbots", "AddDefaultCombatStrategies bot={} in arena", player->GetName());
             engine->addStrategy("arena");
         }
 
@@ -450,6 +453,7 @@ void AiFactory::AddDefaultCombatStrategies(Player* player, PlayerbotAI* const fa
         if (player->getClass() == CLASS_ROGUE)
             engine->addStrategies(/*"behind",*/ "stealth", nullptr);
     }
+    LOG_INFO("playerbots", "AddDefaultCombatStrategies bot={} new strats={}", player->GetName(), engine->ListStrategies());
 }
 
 Engine* AiFactory::createCombatEngine(Player* player, PlayerbotAI* const facade, AiObjectContext* aiObjectContext)
@@ -461,6 +465,7 @@ Engine* AiFactory::createCombatEngine(Player* player, PlayerbotAI* const facade,
 
 void AiFactory::AddDefaultNonCombatStrategies(Player* player, PlayerbotAI* const facade, Engine* nonCombatEngine)
 {
+    LOG_INFO("playerbots", "AddDefaultNonCombatStrategies bot={}", player->GetName());
     uint8 tab = GetPlayerSpecTab(player);
 
     switch (player->getClass())
@@ -538,6 +543,7 @@ void AiFactory::AddDefaultNonCombatStrategies(Player* player, PlayerbotAI* const
 
     if (!player->InBattleground())
     {
+        LOG_INFO("playerbots", "AddDefaultNonCombatStrategies bot={} no bg", player->GetName());
         nonCombatEngine->addStrategies("nc", "food", "chat", "follow",
             "default", "quest", "loot", "gather", "duel", "buff", "mount", nullptr);
     }
@@ -657,10 +663,12 @@ void AiFactory::AddDefaultNonCombatStrategies(Player* player, PlayerbotAI* const
 
         if (player->InArena())
         {
+            LOG_INFO("playerbots", "AddDefaultNonCombatStrategies bot={} in arena", player->GetName());
             nonCombatEngine->addStrategy("arena");
             nonCombatEngine->removeStrategy("mount");
         }
     }
+    LOG_INFO("playerbots", "AddDefaultNonCombatStrategies bot={} new strats={}", player->GetName(), nonCombatEngine->ListStrategies());
 }
 
 Engine* AiFactory::createNonCombatEngine(Player* player, PlayerbotAI* const facade, AiObjectContext* aiObjectContext)
