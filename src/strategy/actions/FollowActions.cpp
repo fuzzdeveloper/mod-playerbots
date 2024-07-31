@@ -26,7 +26,8 @@ bool FollowAction::Execute(Event event)
         if (Formation::IsNullLocation(loc) || loc.GetMapId() == -1)
             return false;
 
-        moved = MoveTo(loc.GetMapId(), loc.GetPositionX(), loc.GetPositionY(), loc.GetPositionZ());
+        JumpTo(loc.GetMapId(), loc.GetPositionX(), loc.GetPositionY(), loc.GetPositionZ());
+        moved = true;
     }
 
     if (Pet* pet = bot->GetPet())
