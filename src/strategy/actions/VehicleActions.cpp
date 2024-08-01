@@ -7,6 +7,7 @@
 #include "Playerbots.h"
 #include "ServerFacade.h"
 #include "Vehicle.h"
+#include "BattlegroundIC.h"
 
 bool EnterVehicleAction::Execute(Event event)
 {
@@ -19,21 +20,28 @@ bool EnterVehicleAction::Execute(Event event)
     {
         Unit* vehicleBase = botAI->GetUnit(*i);
         if (!vehicleBase)
-            return false;
+            continue;
+
+        if (NPC_KEEP_CANNON == vehicleBase->GetEntry())
+            continue;
 
         if (!vehicleBase->IsFriendlyTo(bot))
-            return false;
+            continue;
 
         if (!vehicleBase->GetVehicleKit()->GetAvailableSeatCount())
-            return false;
+            continue;
 
-        if (fabs(bot->GetPositionZ() - vehicleBase->GetPositionZ()) < 20.0f)
+        // passengers dont really do much for the IOC vehicles which is the only place this is used
+        if (vehicleBase->GetVehicleKit()->IsVehicleInUse())
+            continue;
+
+        //if (fabs(bot->GetPositionZ() - vehicleBase->GetPositionZ()) < 20.0f)
 
         //if (sServerFacade->GetDistance2d(bot, vehicle) > 100.0f)
         //    continue;
 
-        if (sServerFacade->GetDistance2d(bot, vehicleBase) > 10.0f)
-            return MoveTo(vehicleBase, INTERACTION_DISTANCE);
+        if (sServerFacade->GetDistance2d(bot, vehicleBase) > INTERACTION_DISTANCE)
+            return MoveTo(vehicleBase, INTERACTION_DISTANCE - 1.0f);
 
         bot->EnterVehicle(vehicleBase);
 

@@ -112,7 +112,10 @@ bool AutoReleaseSpiritAction::Execute(Event event)
             return true;
         }
         if (bot->GetDistance(unit) >= INTERACTION_DISTANCE) {
-            bot->GetMotionMaster()->MoveChase(unit);
+            //DOESN'T WORK IN IOC: bot->GetMotionMaster()->MoveChase(unit);
+            MotionMaster& mm = *bot->GetMotionMaster();
+            mm.Clear();
+            mm.MovePoint(bot->GetMapId(), unit->GetPositionX(), unit->GetPositionY(), unit->GetPositionZ(), true);
         } else {
             bg_gossip_time = time(NULL);
             WorldPacket packet(CMSG_GOSSIP_HELLO);

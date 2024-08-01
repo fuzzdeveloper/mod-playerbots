@@ -95,8 +95,14 @@ std::vector<uint32> const vFlagsWS = { BG_OBJECT_A_FLAG_WS_ENTRY, BG_OBJECT_H_FL
 
 std::vector<uint32> const vFlagsEY = { BG_OBJECT_FLAG2_EY_ENTRY, BG_OBJECT_FLAG3_EY_ENTRY };
 
-std::vector<uint32> const vFlagsIC = { BG_IC_GO_HORDE_BANNER, BG_IC_GO_ALLIANCE_BANNER, BG_IC_GO_WORKSHOP_BANNER, BG_IC_GO_DOCKS_BANNER, BG_IC_GO_HANGAR_BANNER,
-                                       BG_IC_GO_QUARRY_BANNER, BG_IC_GO_REFINERY_BANNER };
+std::vector<uint32> const vFlagsIC = { GO_HORDE_BANNER, GO_ALLIANCE_BANNER, GO_WORKSHOP_BANNER, GO_DOCKS_BANNER, GO_HANGAR_BANNER, GO_QUARRY_BANNER, GO_REFINERY_BANNER,
+                                       GO_ALLIANCE_BANNER_DOCK, GO_ALLIANCE_BANNER_DOCK_CONT, GO_HORDE_BANNER_DOCK, GO_HORDE_BANNER_DOCK_CONT,
+                                       GO_HORDE_BANNER_HANGAR, GO_HORDE_BANNER_HANGAR_CONT, GO_ALLIANCE_BANNER_HANGAR, GO_ALLIANCE_BANNER_HANGAR_CONT,
+                                       GO_ALLIANCE_BANNER_QUARRY, GO_ALLIANCE_BANNER_QUARRY_CONT, GO_HORDE_BANNER_QUARRY, GO_HORDE_BANNER_QUARRY_CONT,
+                                       GO_ALLIANCE_BANNER_REFINERY, GO_ALLIANCE_BANNER_REFINERY_CONT, GO_HORDE_BANNER_REFINERY, GO_HORDE_BANNER_REFINERY_CONT,
+                                       GO_ALLIANCE_BANNER_WORKSHOP, GO_ALLIANCE_BANNER_WORKSHOP_CONT, GO_HORDE_BANNER_WORKSHOP, GO_HORDE_BANNER_WORKSHOP_CONT,
+                                       GO_ALLIANCE_BANNER_GRAVEYARD_A, GO_ALLIANCE_BANNER_GRAVEYARD_A_CONT, GO_HORDE_BANNER_GRAVEYARD_A, GO_HORDE_BANNER_GRAVEYARD_A_CONT,
+                                       GO_ALLIANCE_BANNER_GRAVEYARD_H, GO_ALLIANCE_BANNER_GRAVEYARD_H_CONT, GO_HORDE_BANNER_GRAVEYARD_H, GO_HORDE_BANNER_GRAVEYARD_H_CONT };
 
 // BG Waypoints (vmangos)
 
@@ -2149,6 +2155,26 @@ BattleBotPath vPath_IC_Workshop_to_Workshop_Keep =
     { 773.057f, -859.936f, 12.418f, nullptr }
 };
 
+BattleBotPath vPath_IC_Alliance_Base =
+{
+    { 402.020f, -832.289f, 48.627f, nullptr },
+    { 384.784f, -832.551f, 48.830f, nullptr },
+    { 369.413f, -832.480f, 48.916f, nullptr },
+    { 346.677f, -832.355f, 48.916f, nullptr },
+    { 326.296f, -832.189f, 48.916f, nullptr },
+    { 311.174f, -832.204f, 48.916f, nullptr },
+};
+
+BattleBotPath vPath_IC_Horde_Base =
+{
+    { 1158.652f, -762.680f, 48.628f, nullptr },
+    { 1171.598f, -762.628f, 48.649f, nullptr },
+    { 1189.102f, -763.484f, 48.915f, nullptr },
+    { 1208.599f, -764.332f, 48.915f, nullptr },
+    { 1227.592f, -764.782f, 48.915f, nullptr },
+    { 1253.676f, -765.441f, 48.915f, nullptr },
+};
+
 std::vector<BattleBotPath*> const vPaths_WS =
 {
     &vPath_WSG_HordeFlagRoom_to_HordeGraveyard,
@@ -2307,6 +2333,8 @@ std::vector<BattleBotPath*> const vPaths_IC =
     &vPath_IC_Central_Graveyard_to_Workshop,
     &vPath_IC_Horde_East_Gate_to_Horde_Keep,
     &vPath_IC_Workshop_to_Workshop_Keep,
+    &vPath_IC_Alliance_Base,
+    &vPath_IC_Horde_Base,
 };
 
 std::vector<BattleBotPath*> const vPaths_NoReverseAllowed =
@@ -2441,7 +2469,11 @@ std::string const BGTactics::HandleConsoleCommandPrivate(WorldSession* session, 
     if (!strncmp(cmd, "showpath", 8))
     {
         int num = -1;
-        if (!strncmp(cmd, "showpath=", 9))
+        if (!strncmp(cmd, "showpath=all", 12))
+        {
+            num = -2;
+        }
+        else if (!strncmp(cmd, "showpath=", 9))
         {
             if (sscanf(cmd, "showpath=%d", &num) == -1 || num < 0)
                 return "Bad showpath parameter";
@@ -2474,16 +2506,28 @@ std::string const BGTactics::HandleConsoleCommandPrivate(WorldSession* session, 
                 }
             }
         }
-        if (num >= vPaths->size())
-            return fmt::format("Path out of range of 0 - {}", vPaths->size() - 1);
-        auto const& path = (*vPaths)[num];
-        for (uint32 i = 0; i < path->size(); i++)
+        uint32 min = 0u;
+        uint32 max = vPaths->size() - 1;
+        if (num >= 0)//num specified or found
         {
-            BattleBotWaypoint& waypoint = ((*path)[i]);
-            Creature* wpCreature = player->SummonCreature(15631, waypoint.x, waypoint.y, waypoint.z, 0, TEMPSUMMON_TIMED_DESPAWN, 15000u);
-            wpCreature->SetOwnerGUID(player->GetGUID());
+            if (num > max)
+                return fmt::format("Path {} of range of 0 - {}", num, max);
+            min = num;
+            max = num;
         }
-        return fmt::format("Showing path {}", num);
+        for (uint32 j = min; j <= max; j++)
+        {
+            auto const& path = (*vPaths)[j];
+            for (uint32 i = 0; i < path->size(); i++)
+            {
+                BattleBotWaypoint& waypoint = ((*path)[i]);
+                Creature* wpCreature = player->SummonCreature(15631, waypoint.x, waypoint.y, waypoint.z, 0, TEMPSUMMON_TIMED_DESPAWN, 15000u);
+                wpCreature->SetOwnerGUID(player->GetGUID());
+            }
+        }
+        if (num >= 0)
+            return fmt::format("Showing path {}", num);
+        return fmt::format("Showing paths 0 - {}", max);
     }
 
     if (!strncmp(cmd, "showcreature=", 13))
@@ -3963,8 +4007,8 @@ bool BGTactics::selectObjective(bool reset)
                 bool allCaptured = true;
                 for (uint8 i = 0; i < MAX_NODE_TYPES; ++i)
                 {
-                    // skip refinery and keep
-                    if (i == NODE_TYPE_REFINERY || i == NODE_TYPE_GRAVEYARD_H)
+                    // skip quarry refinery and keep
+                    if (i == NODE_TYPE_QUARRY || i == NODE_TYPE_REFINERY || i == NODE_TYPE_GRAVEYARD_H)
                         continue;
 
                     ICNodePoint const& nodePoint = isleOfConquestBG->GetICNodePoint(i);
@@ -3992,7 +4036,6 @@ bool BGTactics::selectObjective(bool reset)
                 // If main bases are not captured, split tasks
                 if (!BgObjective)
                 {
-                    bool foundTask = false;
                     // mount defensive cannons
                     if (role > 10) // disabled
                     {
@@ -4019,8 +4062,6 @@ bool BGTactics::selectObjective(bool reset)
                         if (nodePoint.nodeState != NODE_STATE_CONFLICT_H && nodePoint.nodeState != NODE_STATE_CONTROLLED_H)
                         {
                             BgObjective = bg->GetBGObject(BG_IC_GO_REFINERY_BANNER);
-                            currentObjective = BG_IC_GO_REFINERY_BANNER;
-                            foundTask = true;
                         }
                     }
 
@@ -4033,9 +4074,6 @@ bool BGTactics::selectObjective(bool reset)
                             if (GameObject* pGO = bg->GetBGObject(BG_IC_GO_DOCKS_BANNER))
                             {
                                 BgObjective = pGO;
-                                currentObjective = BG_IC_GO_DOCKS_BANNER;
-                                foundTask = true;
-
                                 //ostringstream out;
                                 //out << "DOCKS! BG objective set to " << BgObjective->GetName();
                                 //bot->Say(out.str(), LANG_UNIVERSAL);
@@ -4051,9 +4089,6 @@ bool BGTactics::selectObjective(bool reset)
                             if (GameObject* pGO = bg->GetBGObject(BG_IC_GO_WORKSHOP_BANNER))
                             {
                                 BgObjective = pGO;
-                                currentObjective = BG_IC_GO_WORKSHOP_BANNER;
-                                foundTask = true;
-
                                 //ostringstream out;
                                 //out << "WORKSHOP! BG objective set to " << BgObjective->GetName();
                                 //bot->Say(out.str(), LANG_UNIVERSAL);
@@ -4068,8 +4103,6 @@ bool BGTactics::selectObjective(bool reset)
                             if (GameObject* pGO = bg->GetBGObject(BG_IC_GO_HANGAR_BANNER))
                             {
                                 BgObjective = pGO;
-                                currentObjective = BG_IC_GO_HANGAR_BANNER;
-                                foundTask = true;
                                 //ostringstream out;
                                 //out << "HANGAR! BG objective set to " << BgObjective->GetName();
                                 //bot->Say(out.str(), LANG_UNIVERSAL);
@@ -4080,7 +4113,7 @@ bool BGTactics::selectObjective(bool reset)
                     if (!BgObjective || controlsVehicle) // Check gates
                     {
                         // Keep Gates open if any wall is destroyed, check it
-                        if (GameObject* pGO = bg->GetBGObject(BG_IC_GO_DOODAD_PORTCULLISACTIVE01))
+                        if (GameObject* pGO = bg->GetBGObject(BG_IC_GO_DOODAD_PORTCULLISACTIVE02))
                         {
                             if (pGO->isSpawned() && pGO->getLootState() == GO_ACTIVATED)
                             {
@@ -4134,9 +4167,6 @@ bool BGTactics::selectObjective(bool reset)
                             if (GameObject* pGO = bg->GetBGObject(BG_IC_GO_ALLIANCE_BANNER))
                             {
                                 BgObjective = pGO;
-                                currentObjective = BG_IC_GO_ALLIANCE_BANNER;
-                                foundTask = true;
-
                                 //ostringstream out;
                                 //out << "ALLY KEEP! BG objective set to " << BgObjective->GetName();
                                 //bot->Say(out.str(), LANG_UNIVERSAL);
@@ -4152,8 +4182,8 @@ bool BGTactics::selectObjective(bool reset)
                 bool allCaptured = true;
                 for (uint8 i = 0; i < MAX_NODE_TYPES; ++i)
                 {
-                    // skip quarry and keep
-                    if (i == NODE_TYPE_QUARRY || i == NODE_TYPE_GRAVEYARD_A)
+                    // skip quarry refinery and keep
+                    if (i == NODE_TYPE_QUARRY || i == NODE_TYPE_REFINERY || i == NODE_TYPE_GRAVEYARD_A)
                         continue;
 
                     ICNodePoint const& nodePoint = isleOfConquestBG->GetICNodePoint(i);
@@ -4181,7 +4211,6 @@ bool BGTactics::selectObjective(bool reset)
                 // If main bases are not captured, split tasks
                 if (!BgObjective)
                 {
-                    bool foundTask = false;
                     // mount defensive cannons
                     if (role > 10) // disabled
                     {
@@ -4211,9 +4240,6 @@ bool BGTactics::selectObjective(bool reset)
                             if (GameObject* pGO = bg->GetBGObject(BG_IC_GO_QUARRY_BANNER))
                             {
                                 BgObjective = pGO;
-                                currentObjective = BG_IC_GO_QUARRY_BANNER;
-                                foundTask = true;
-
                                 //ostringstream out;
                                 //out << "QUARRY! BG objective set to " << BgObjective->GetName();
                                 //bot->Say(out.str(), LANG_UNIVERSAL);
@@ -4238,9 +4264,6 @@ bool BGTactics::selectObjective(bool reset)
                             if (GameObject* pGO = bg->GetBGObject(BG_IC_GO_DOCKS_BANNER))
                             {
                                 BgObjective = pGO;
-                                currentObjective = BG_IC_GO_DOCKS_BANNER;
-                                foundTask = true;
-
                                 //ostringstream out;
                                 //out << "DOCKS! BG objective set to " << BgObjective->GetName();
                                 //bot->Say(out.str(), LANG_UNIVERSAL);
@@ -4256,9 +4279,6 @@ bool BGTactics::selectObjective(bool reset)
                             if (GameObject* pGO = bg->GetBGObject(BG_IC_GO_WORKSHOP_BANNER))
                             {
                                 BgObjective = pGO;
-                                currentObjective = BG_IC_GO_WORKSHOP_BANNER;
-                                foundTask = true;
-
                                 //ostringstream out;
                                 //out << "WORKSHOP! BG objective set to " << BgObjective->GetName();
                                 //bot->Say(out.str(), LANG_UNIVERSAL);
@@ -4273,9 +4293,6 @@ bool BGTactics::selectObjective(bool reset)
                             if (GameObject* pGO = bg->GetBGObject(BG_IC_GO_HANGAR_BANNER))
                             {
                                 BgObjective = pGO;
-                                currentObjective = BG_IC_GO_HANGAR_BANNER;
-                                foundTask = true;
-
                                 //ostringstream out;
                                 //out << "HANGAR! BG objective set to " << BgObjective->GetName();
                                 //bot->Say(out.str(), LANG_UNIVERSAL);
@@ -4342,9 +4359,6 @@ bool BGTactics::selectObjective(bool reset)
                             if (GameObject* pGO = bg->GetBGObject(BG_IC_GO_HORDE_BANNER))
                             {
                                 BgObjective = pGO;
-                                currentObjective = BG_IC_GO_HORDE_BANNER;
-                                foundTask = true;
-
                                 //ostringstream out;
                                 //out << "HORDE KEEP! BG objective set to " << BgObjective->GetName();
                                 //bot->Say(out.str(), LANG_UNIVERSAL);
@@ -4461,7 +4475,10 @@ bool BGTactics::selectObjectiveWp(std::vector<BattleBotPath*> const& vPaths)
     float botDistanceScoreMultiply = 3.0f; // path score modifier - higher = less likely to chose a further path (it's basically a multiplier on distance from bot - makes distance from bot more signifcant than distance from destination)
 
     if (bgType == BATTLEGROUND_IC)
+    {
         botDistanceLimit = 80.0f;
+        botDistanceScoreMultiply = 8.0f;
+    }
     else if (bgType == BATTLEGROUND_AB || bgType == BATTLEGROUND_EY)
     {
         botDistanceScoreSubtract = 2.0f;

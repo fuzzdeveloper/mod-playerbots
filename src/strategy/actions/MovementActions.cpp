@@ -161,6 +161,7 @@ bool MovementAction::MoveTo(uint32 mapId, float x, float y, float z, bool idle, 
     if (!IsMovingAllowed(mapId, x, y, z)) {
         return false;
     }
+
     // if (bot->Unit::IsFalling()) {
     //     bot->Say("I'm falling!, flag:" + std::to_string(bot->m_movementInfo.GetMovementFlags()), LANG_UNIVERSAL);
     //     return false;
@@ -171,10 +172,26 @@ bool MovementAction::MoveTo(uint32 mapId, float x, float y, float z, bool idle, 
     // if (bot->Unit::IsFalling()) {
     //     bot->Say("I'm falling", LANG_UNIVERSAL);
     // }
+
     bool generatePath = !bot->HasAuraType(SPELL_AURA_MOD_INCREASE_MOUNTED_FLIGHT_SPEED) &&
             !bot->IsFlying() && !bot->HasUnitMovementFlag(MOVEMENTFLAG_SWIMMING) && !bot->IsInWater();
+
+    if (Vehicle* vehicle = bot->GetVehicle())
+    {
+        VehicleSeatEntry const* seat = vehicle->GetSeatForPassenger(bot);
+        if (!seat || !seat->CanControl())
+            return false;
+
+        botAI->SetNextCheckDelay(sPlayerbotAIConfig->maxWaitForMove);
+
+        vehicle->GetBase()->GetMotionMaster()->Clear();
+        vehicle->GetBase()->GetMotionMaster()->MovePoint(mapId, x, y, z, generatePath);
+        return true;
+    }
+
     bool disableMoveSplinePath = sPlayerbotAIConfig->disableMoveSplinePath >= 2 ||
         (sPlayerbotAIConfig->disableMoveSplinePath == 1 && bot->InBattleground());
+
     if (disableMoveSplinePath || !generatePath) {
         float distance = bot->GetExactDist(x, y, z);
         if (distance > sPlayerbotAIConfig->contactDistance)
