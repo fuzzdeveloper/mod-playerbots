@@ -76,6 +76,9 @@ Position const IC_CANNON_POS_HORDE2 = { 1139.695f, -686.574f, 88.173f, 3.95f };
 Position const IC_CANNON_POS_ALLIANCE1 = { 424.860f, -855.795f, 87.96f, 0.44f };
 Position const IC_CANNON_POS_ALLIANCE2 = { 425.525f, -779.538f, 87.717f, 5.88f };
 
+Position const IC_GATE_ATTACK_POS_HORDE = { 506.782f, -828.594f, 24.313f, 0.0f };
+Position const IC_GATE_ATTACK_POS_ALLIANCE = { 1091.273f, -763.619f, 42.352f, 0.0f };
+
 enum BattleBotWsgWaitSpot
 {
     BB_WSG_WAIT_SPOT_SPAWN,
@@ -1635,7 +1638,7 @@ BattleBotPath vPath_AV_Frostdagger_Pass_Lower_to_Iceblood_Garrison =
 // path that allows alliance to bypass the mid on way to horde captain
 BattleBotPath vPath_AV_Icewing_Bunker_Crossroad_to_Frostdagger_Pass_Lower =
 {
-    //these are to cause bot to pick this when resurrecting at stonehearth (not really needed anymore as they get captain down in first wave since uneeded dismounting was fixed)
+    //added the first 3 are to cause bot to pick this when resurrecting at stonehearth - seems to be key thing to stopping alliance getting bogged down in mid fighting, away from their objective (enemy captain) but close to horde objectives
     { 68.793f, -396.742f, 45.299f, nullptr },
     { 99.042f, -389.310f, 45.101f, nullptr },
     { 123.787f, -373.551f, 42.893f, nullptr },
@@ -3037,7 +3040,8 @@ bool BGTactics::Execute(Event event)
         if (useBuff())
             return true;
 
-        if (bot->IsInCombat() && !(bot->HasAura(BG_WS_SPELL_WARSONG_FLAG) || bot->HasAura(BG_WS_SPELL_SILVERWING_FLAG) || bot->HasAura(BG_EY_NETHERSTORM_FLAG_SPELL)))
+        // NOTE: !bot->GetVehicle() check is due to bug (in AC itself?) where player stays in combat forever when in a vehicle
+        if (!bot->GetVehicle() && bot->IsInCombat() && !(bot->HasAura(BG_WS_SPELL_WARSONG_FLAG) || bot->HasAura(BG_WS_SPELL_SILVERWING_FLAG) || bot->HasAura(BG_EY_NETHERSTORM_FLAG_SPELL)))
         {
             //bot->GetMotionMaster()->MovementExpired();
             return false;
@@ -3990,7 +3994,6 @@ bool BGTactics::selectObjective(bool reset)
         {
             BattlegroundIC* isleOfConquestBG = (BattlegroundIC*)bg;
 
-            uint32 currentObjective = MAX_NODE_TYPES;
             uint32 role = context->GetValue<uint32>("bg role")->Get();
             bool inVehicle = botAI->IsInVehicle();
             bool controlsVehicle = botAI->IsInVehicle(true);
@@ -4133,9 +4136,11 @@ bool BGTactics::selectObjective(bool reset)
                                         else
                                         {
                                             // take a siege position
-                                            pos.Set(506.782f + frand(-5, +5), -828.594f + frand(-5, +5), 24.313f, bot->GetMapId());
+                                            if (sqrt(bot->GetDistance(IC_GATE_ATTACK_POS_HORDE)) < 7.0f)//just make bot stay where it is (stops them shifting around to the random spots)
+                                                pos.Set(bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ(), bot->GetMapId());
+                                            else
+                                                pos.Set(IC_GATE_ATTACK_POS_HORDE.GetPositionX() + frand(-5.0f, +5.0f), IC_GATE_ATTACK_POS_HORDE.GetPositionY() + frand(-5.0f, +5.0f), IC_GATE_ATTACK_POS_HORDE.GetPositionZ(), bot->GetMapId());
                                             posMap["bg objective"] = pos;
-
                                             // set siege position
                                             PositionInfo siegePos = context->GetValue<PositionMap&>("position")->Get()["bg siege"];
                                             siegePos.Set(gate->GetPositionX(), gate->GetPositionY(), gate->GetPositionZ(), bot->GetMapId());
@@ -4145,7 +4150,11 @@ bool BGTactics::selectObjective(bool reset)
                                     }
                                     else
                                     {
-                                        pos.Set(506.782f + frand(-5, +5), -828.594f + frand(-5, +5), 24.313f, bot->GetMapId());
+                                        // guard vehicles as they seige
+                                        if (sqrt(bot->GetDistance(IC_GATE_ATTACK_POS_HORDE)) < 7.0f)//just make bot stay where it is (stops them shifting around to the random spots)
+                                            pos.Set(bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ(), bot->GetMapId());
+                                        else
+                                            pos.Set(IC_GATE_ATTACK_POS_HORDE.GetPositionX(), IC_GATE_ATTACK_POS_HORDE.GetPositionY(), IC_GATE_ATTACK_POS_HORDE.GetPositionZ(), bot->GetMapId());
                                         posMap["bg objective"] = pos;
                                         return true;
                                         //BgObjective = gate;
@@ -4324,9 +4333,11 @@ bool BGTactics::selectObjective(bool reset)
                                         else
                                         {
                                             // take a siege position
-                                            pos.Set(1091.273f + frand(-5, +5), -763.619f + frand(-5, +5), 42.352f, bot->GetMapId());
+                                            if (sqrt(bot->GetDistance(IC_GATE_ATTACK_POS_ALLIANCE)) < 7.0f)//just make bot stay where it is (stops them shifting around to the random spots)
+                                                pos.Set(bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ(), bot->GetMapId());
+                                            else
+                                                pos.Set(IC_GATE_ATTACK_POS_ALLIANCE.GetPositionX() + frand(-5.0f, +5.0f), IC_GATE_ATTACK_POS_ALLIANCE.GetPositionY() + frand(-5.0f, +5.0f), IC_GATE_ATTACK_POS_ALLIANCE.GetPositionZ(), bot->GetMapId());
                                             posMap["bg objective"] = pos;
-
                                             // set siege position
                                             PositionInfo siegePos = context->GetValue<PositionMap&>("position")->Get()["bg siege"];
                                             siegePos.Set(gate->GetPositionX(), gate->GetPositionY(), gate->GetPositionZ(), bot->GetMapId());
@@ -4336,10 +4347,13 @@ bool BGTactics::selectObjective(bool reset)
                                     }
                                     else
                                     {
-                                        pos.Set(1091.273f + frand(-5, +5), -763.619f + frand(-5, +5), 42.352f, bot->GetMapId());
+                                        // guard vehicles as they seige
+                                        if (sqrt(bot->GetDistance(IC_GATE_ATTACK_POS_ALLIANCE)) < 7.0f)//just make bot stay where it is (stops them shifting around to the random spots)
+                                            pos.Set(bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ(), bot->GetMapId());
+                                        else
+                                            pos.Set(IC_GATE_ATTACK_POS_ALLIANCE.GetPositionX() + frand(-5, +5), IC_GATE_ATTACK_POS_ALLIANCE.GetPositionY() + frand(-5, +5), IC_GATE_ATTACK_POS_ALLIANCE.GetPositionZ(), bot->GetMapId());
                                         posMap["bg objective"] = pos;
                                         return true;
-                                        // take a siege position
                                         //BgObjective = gate;
                                     }
                                 }
@@ -4580,8 +4594,9 @@ bool BGTactics::moveToObjectiveWp(BattleBotPath* const& currentPath, uint32 curr
 
     uint32 const lastPointInPath = reverse ? 0 : ((*currentPath).size() - 1);
 
+    // NOTE: !bot->GetVehicle() check is due to bug (in AC itself?) where player stays in combat forever when in a vehicle
     if ((currentPoint == lastPointInPath) ||
-        (bot->IsInCombat() && !(bot->HasAura(BG_WS_SPELL_WARSONG_FLAG) || bot->HasAura(BG_WS_SPELL_SILVERWING_FLAG) || bot->HasAura(BG_EY_NETHERSTORM_FLAG_SPELL))) || !bot->IsAlive()) {
+        (!bot->GetVehicle() && bot->IsInCombat() && !(bot->HasAura(BG_WS_SPELL_WARSONG_FLAG) || bot->HasAura(BG_WS_SPELL_SILVERWING_FLAG) || bot->HasAura(BG_EY_NETHERSTORM_FLAG_SPELL))) || !bot->IsAlive()) {
         // Path is over.
         //std::ostringstream out;
         //out << "Reached path end!";

@@ -9,6 +9,7 @@
 #include "Vehicle.h"
 #include "BattlegroundIC.h"
 
+// TODO enter and exit vehicle should probably be done directly within BGTactics (so that we can control whether bot is in vehicle depending on state of BG, right now they go in if anywhere near vehicle and are basically stuck in there until they die)
 bool EnterVehicleAction::Execute(Event event)
 {
     // do not switch vehicles yet
@@ -22,6 +23,7 @@ bool EnterVehicleAction::Execute(Event event)
         if (!vehicleBase)
             continue;
 
+        // dont let them get in the cannons as they'll stay forever and do nothing useful
         if (NPC_KEEP_CANNON == vehicleBase->GetEntry())
             continue;
 
@@ -31,7 +33,7 @@ bool EnterVehicleAction::Execute(Event event)
         if (!vehicleBase->GetVehicleKit()->GetAvailableSeatCount())
             continue;
 
-        // passengers dont really do much for the IOC vehicles which is the only place this is used
+        // this will avoid adding passengers (which dont really do much for the IOC vehicles which is the only place this code is used)
         if (vehicleBase->GetVehicleKit()->IsVehicleInUse())
             continue;
 
