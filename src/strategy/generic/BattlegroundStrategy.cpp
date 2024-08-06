@@ -73,7 +73,7 @@ void IsleStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     triggers.push_back(new TriggerNode("enemy out of melee", NextAction::array(0, new NextAction("steam rush", 81.0f), nullptr)));
     triggers.push_back(new TriggerNode("in vehicle", NextAction::array(0, new NextAction("incendiary rocket", 70.0f), nullptr)));
     triggers.push_back(new TriggerNode("in vehicle", NextAction::array(0, new NextAction("rocket blast", 70.0f), nullptr)));
-    triggers.push_back(new TriggerNode("in vehicle", NextAction::array(0, new NextAction("blade salvo", 71.0f), nullptr)));
+    //triggers.push_back(new TriggerNode("in vehicle", NextAction::array(0, new NextAction("blade salvo", 71.0f), nullptr)));//this is bugged and stops glaive throw working
     triggers.push_back(new TriggerNode("in vehicle", NextAction::array(0, new NextAction("glaive throw", 70.0f), nullptr)));
 }
 

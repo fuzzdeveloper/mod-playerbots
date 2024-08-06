@@ -179,13 +179,17 @@ bool MovementAction::MoveTo(uint32 mapId, float x, float y, float z, bool idle, 
     if (Vehicle* vehicle = bot->GetVehicle())
     {
         VehicleSeatEntry const* seat = vehicle->GetSeatForPassenger(bot);
-        if (!seat || !seat->CanControl())
+        Unit* vehicleBase = vehicle->GetBase();
+        if (!vehicleBase || !seat || !seat->CanControl())//passenger
             return false;
-
-        botAI->SetNextCheckDelay(sPlayerbotAIConfig->maxWaitForMove);
-
-        vehicle->GetBase()->GetMotionMaster()->Clear();
-        vehicle->GetBase()->GetMotionMaster()->MovePoint(mapId, x, y, z, generatePath);
+        float distance = vehicleBase->GetExactDist(x, y, z);
+        if (distance <= sPlayerbotAIConfig->contactDistance)
+            return false;
+        float delay = 1000.0f * MoveDelay(distance / vehicleBase->GetSpeed(MOVE_RUN));
+        if (delay > 0.0f)
+            botAI->SetNextCheckDelay(delay < sPlayerbotAIConfig->maxWaitForMove ? delay : sPlayerbotAIConfig->maxWaitForMove);
+        vehicleBase->GetMotionMaster()->Clear();
+        vehicleBase->GetMotionMaster()->MovePoint(mapId, x, y, z, generatePath);
         return true;
     }
 
